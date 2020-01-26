@@ -22,12 +22,12 @@ class User extends Robinhood {
    * @param {String} deviceToken
    */
   constructor(username, password, deviceToken) {
-    super();
-    this.username = username;
-    this.password = password;
-    this.deviceToken = deviceToken;
-    this.token = null; // Authentication token
-    this.account = null; // Account number
+	super();
+	this.username = username;
+	this.password = password;
+	this.deviceToken = deviceToken;
+	this.token = null; // Authentication token
+	this.account = null; // Account number
   }
 
   /**
@@ -36,132 +36,132 @@ class User extends Robinhood {
    * @returns {Promise<Boolean>}
    */
   authenticate(mfaFunction) {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      if (_this.password == null) {
-        console.log(
-          "You didn't include a password in the constructor of your Robinhood user and it is required to authenticate your account."
-        );
-        prompt.get(
-          {
-            properties: {
-              password: {
-                required: true,
-                hidden: true
-              }
-            }
-          },
-          (error, result) => {
-            _this.password = result.password;
-            _preAuth(resolve, reject);
-          }
-        );
-      } else _preAuth(resolve, reject);
-    });
-    function _preAuth(resolve, reject) {
-      request.post(
-        {
-          uri: _this.url + '/oauth2/token/',
-          form: {
-            username: _this.username,
-            password: _this.password,
-            client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
-            device_token: _this.deviceToken,
-            grant_type: 'password',
-            scope: 'internal'
-          }
-        },
-        (error, response, body) => {
-          if (error) reject(error);
-          else if (response.statusCode !== 200) reject(new LibraryError(body));
-          else {
-            const json = JSON.parse(body);
-            if (json.mfa_required) {
-              if (mfaFunction !== undefined) {
-                console.log(
-                  'Multi-factor authentication detected. Executing the provided function...'
-                );
-                mfaFunction()
-                  .then(mfa => {
-                    if (!mfa instanceof String)
-                      reject(
-                        new Error(
-                          'The provided function did not return a string after the promise resolved.'
-                        )
-                      );
-                    else if (mfa.length !== 6)
-                      reject(
-                        new Error(
-                          'The provided function returned a string, but it is not six-characters in length.'
-                        )
-                      );
-                    else _sendMFA(mfa, resolve, reject);
-                  })
-                  .catch(error => {
-                    console.log(
-                      'An error occurred while executing the provided MFA function.'
-                    );
-                    reject(error);
-                  });
-              } else {
-                console.log(
-                  'Multi-factor authentication detected. Please enter your six-digit code below:'
-                );
-                console.log(
-                  ' - This can be entered programmatically by passing a function when authenticating. See documentation for more.'
-                );
-                prompt.get(
-                  {
-                    properties: {
-                      code: {
-                        pattern: /^[0-9]{6}$/,
-                        message:
-                          'Your Robinhood code will most likely be texted to you and should only contain 6 integers.',
-                        required: true
-                      }
-                    }
-                  },
-                  (error, mfaCode) => {
-                    _sendMFA(mfaCode.code, resolve, reject);
-                  }
-                );
-              }
-            } else _postAuth(json, resolve, reject);
-          }
-        }
-      );
-    }
-    function _sendMFA(mfaCode, resolve, reject) {
-      request.post(
-        {
-          uri: _this.url + '/oauth2/token/',
-          form: {
-            username: _this.username,
-            password: _this.password,
-            client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
-            grant_type: 'password',
-            scope: 'internal',
-            mfa_code: mfaCode
-          }
-        },
-        (error, response, body) => {
-          if (error) reject(error);
-          else if (response.statusCode !== 200) reject(new LibraryError(body));
-          else _postAuth(JSON.parse(body), resolve, reject);
-        }
-      );
-    }
-    function _postAuth(json, resolve, reject) {
-      _this.token = json.access_token;
-      _this
-        .getAccount()
-        .then(account => {
-          _this.account = account.account_number;
-          _this.password = '*'.repeat(_this.password.length);
-          resolve(_this);
-        })
-        .catch(error => reject(error));
-    }
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  if (_this.password == null) {
+		console.log(
+		  "You didn't include a password in the constructor of your Robinhood user and it is required to authenticate your account."
+		);
+		prompt.get(
+		  {
+			properties: {
+			  password: {
+				required: true,
+				hidden: true
+			  }
+			}
+		  },
+		  (error, result) => {
+			_this.password = result.password;
+			_preAuth(resolve, reject);
+		  }
+		);
+	  } else _preAuth(resolve, reject);
+	});
+	function _preAuth(resolve, reject) {
+	  request.post(
+		{
+		  uri: _this.url + '/oauth2/token/',
+		  form: {
+			username: _this.username,
+			password: _this.password,
+			client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+			device_token: _this.deviceToken,
+			grant_type: 'password',
+			scope: 'internal'
+		  }
+		},
+		(error, response, body) => {
+		  if (error) reject(error);
+		  else if (response.statusCode !== 200) reject(new LibraryError(body));
+		  else {
+			const json = JSON.parse(body);
+			if (json.mfa_required) {
+			  if (mfaFunction !== undefined) {
+				console.log(
+				  'Multi-factor authentication detected. Executing the provided function...'
+				);
+				mfaFunction()
+				  .then(mfa => {
+					if (!mfa instanceof String)
+					  reject(
+						new Error(
+						  'The provided function did not return a string after the promise resolved.'
+						)
+					  );
+					else if (mfa.length !== 6)
+					  reject(
+						new Error(
+						  'The provided function returned a string, but it is not six-characters in length.'
+						)
+					  );
+					else _sendMFA(mfa, resolve, reject);
+				  })
+				  .catch(error => {
+					console.log(
+					  'An error occurred while executing the provided MFA function.'
+					);
+					reject(error);
+				  });
+			  } else {
+				console.log(
+				  'Multi-factor authentication detected. Please enter your six-digit code below:'
+				);
+				console.log(
+				  ' - This can be entered programmatically by passing a function when authenticating. See documentation for more.'
+				);
+				prompt.get(
+				  {
+					properties: {
+					  code: {
+						pattern: /^[0-9]{6}$/,
+						message:
+						  'Your Robinhood code will most likely be texted to you and should only contain 6 integers.',
+						required: true
+					  }
+					}
+				  },
+				  (error, mfaCode) => {
+					_sendMFA(mfaCode.code, resolve, reject);
+				  }
+				);
+			  }
+			} else _postAuth(json, resolve, reject);
+		  }
+		}
+	  );
+	}
+	function _sendMFA(mfaCode, resolve, reject) {
+	  request.post(
+		{
+		  uri: _this.url + '/oauth2/token/',
+		  form: {
+			username: _this.username,
+			password: _this.password,
+			client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+			grant_type: 'password',
+			scope: 'internal',
+			mfa_code: mfaCode
+		  }
+		},
+		(error, response, body) => {
+		  if (error) reject(error);
+		  else if (response.statusCode !== 200) reject(new LibraryError(body));
+		  else _postAuth(JSON.parse(body), resolve, reject);
+		}
+	  );
+	}
+	function _postAuth(json, resolve, reject) {
+	  _this.token = json.access_token;
+	  _this
+		.getAccount()
+		.then(account => {
+		  _this.account = account.account_number;
+		  _this.password = '*'.repeat(_this.password.length);
+		  resolve(_this);
+		})
+		.catch(error => reject(error));
+	}
   }
 
   /**
@@ -169,36 +169,36 @@ class User extends Robinhood {
    * @returns {Promise<Boolean>}
    */
   logout() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request.post(
-        {
-          uri: _this.url + '/api-token-logout/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          if (error) reject(error);
-          else if (response.statusCode !== 200) reject(new LibraryError(body));
-          else resolve(true);
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request.post(
+		{
+		  uri: _this.url + '/api-token-logout/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  if (error) reject(error);
+		  else if (response.statusCode !== 200) reject(new LibraryError(body));
+		  else resolve(true);
+		}
+	  );
+	});
   }
 
   // GET
 
   getAuthToken() {
-    return this.token;
+	return this.token;
   }
 
   getAccountNumber() {
-    return this.account;
+	return this.account;
   }
 
   getUsername() {
-    return this.username;
+	return this.username;
   }
 
   /**
@@ -206,27 +206,27 @@ class User extends Robinhood {
    * @returns {Promise}
    */
   getAccount() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/accounts/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/accounts/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -234,43 +234,43 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getBalances() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      _this
-        .getAccount()
-        .then(res => {
-          resolve({
-            unsettledFunds: res.unsettled_funds,
-            unsettledDebit: res.unsettled_debit,
-            unclearedDeposits: res.uncleared_deposits,
-            smaHeldForOrders: res.sma_held_for_orders,
-            cash: res.cash,
-            cashHeldForOrders: res.cash_held_for_orders,
-            cashAvailableForWithdraw: res.cash_available_for_withdraw,
-            buyingPower: res.buying_power,
-            sma: res.sma,
-            accountType: res.type,
-            margin: {
-              goldEquityRequirement:
-                res.margin_balances.gold_equity_requirement,
-              outstandingInterest: res.margin_balances.outstanding_interest,
-              cashHeldForOptionsCollateral:
-                res.margin_balances.cash_held_for_options_collateral,
-              dayTradeBuyingPower: res.margin_balances.day_trade_buying_power,
-              unallocatedMarginCash:
-                res.margin_balances.unallocated_margin_cash,
-              startOfDayOvernightBuyingPower:
-                res.margin_balances.start_of_day_overnight_buying_power,
-              marginLimit: res.margin_balances.margin_limit,
-              overnightBuyingPower: res.margin_balances.overnight_buying_power,
-              startOfDayDtbp: res.margin_balances.start_of_day_dtbp,
-              dayTradeBuyingPowerHeldForOrders:
-                res.margin_balances.day_trade_buying_power_held_for_orders
-            }
-          });
-        })
-        .catch(error => reject(error));
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  _this
+		.getAccount()
+		.then(res => {
+		  resolve({
+			unsettledFunds: res.unsettled_funds,
+			unsettledDebit: res.unsettled_debit,
+			unclearedDeposits: res.uncleared_deposits,
+			smaHeldForOrders: res.sma_held_for_orders,
+			cash: res.cash,
+			cashHeldForOrders: res.cash_held_for_orders,
+			cashAvailableForWithdraw: res.cash_available_for_withdraw,
+			buyingPower: res.buying_power,
+			sma: res.sma,
+			accountType: res.type,
+			margin: {
+			  goldEquityRequirement:
+				res.margin_balances.gold_equity_requirement,
+			  outstandingInterest: res.margin_balances.outstanding_interest,
+			  cashHeldForOptionsCollateral:
+				res.margin_balances.cash_held_for_options_collateral,
+			  dayTradeBuyingPower: res.margin_balances.day_trade_buying_power,
+			  unallocatedMarginCash:
+				res.margin_balances.unallocated_margin_cash,
+			  startOfDayOvernightBuyingPower:
+				res.margin_balances.start_of_day_overnight_buying_power,
+			  marginLimit: res.margin_balances.margin_limit,
+			  overnightBuyingPower: res.margin_balances.overnight_buying_power,
+			  startOfDayDtbp: res.margin_balances.start_of_day_dtbp,
+			  dayTradeBuyingPowerHeldForOrders:
+				res.margin_balances.day_trade_buying_power_held_for_orders
+			}
+		  });
+		})
+		.catch(error => reject(error));
+	});
   }
 
   /**
@@ -278,15 +278,15 @@ class User extends Robinhood {
    * @returns {Promise}
    */
   getBuyingPower() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      _this
-        .getAccount()
-        .then(res => {
-          resolve(Number(res.buying_power));
-        })
-        .catch(error => reject(error));
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  _this
+		.getAccount()
+		.then(res => {
+		  resolve(Number(res.buying_power));
+		})
+		.catch(error => reject(error));
+	});
   }
 
   /**
@@ -294,27 +294,27 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getUserInfo() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/user/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/user/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -322,29 +322,29 @@ class User extends Robinhood {
    * @returns {Promise<String>}
    */
   getUID() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/user/id/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            res => {
-              resolve(res.id);
-            },
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/user/id/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			res => {
+			  resolve(res.id);
+			},
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -352,27 +352,27 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getTaxInfo() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/user/basic_info/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/user/basic_info/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -380,27 +380,27 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getDisclosureInfo() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/user/additional_info/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/user/additional_info/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -408,27 +408,27 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getEmployerInfo() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/user/employment/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/user/employment/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -436,27 +436,27 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getInvestmentProfile() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/user/investment_profile/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/user/investment_profile/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -464,27 +464,27 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getRecentDayTrades() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/accounts/' + _this.account + '/recent_day_trades/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/accounts/' + _this.account + '/recent_day_trades/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -492,7 +492,7 @@ class User extends Robinhood {
    * @returns {Promise<Order[]>}
    */
   getRecentOrders() {
-    return Order.getRecentOrders(this);
+	return Order.getRecentOrders(this);
   }
 
   /**
@@ -500,7 +500,7 @@ class User extends Robinhood {
    * @returns {Promise}
    */
   cancelOpenOrders() {
-    return Order.cancelOpenOrders(this);
+	return Order.cancelOpenOrders(this);
   }
 
   /**
@@ -508,7 +508,7 @@ class User extends Robinhood {
    * @returns {Promise<Array>}
    */
   getRecentOptionOrders() {
-    return OptionOrder.getRecentOrders(this);
+	return OptionOrder.getRecentOrders(this);
   }
 
   /**
@@ -516,47 +516,47 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getPortfolio() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/accounts/' + _this.account + '/positions/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            res => {
-              let array = [];
-              async.forEachOf(
-                res,
-                (position, key, callback) => {
-                  position.quantity = Number(position.quantity);
-                  if (position.quantity !== 0) {
-                    Instrument.getByURL(position.instrument).then(
-                      instrument => {
-                        position.InstrumentObject = instrument;
-                        array.push(position);
-                        callback();
-                      }
-                    );
-                  } else callback();
-                },
-                () => {
-                  resolve(new Portfolio(_this, array));
-                }
-              );
-            },
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/accounts/' + _this.account + '/positions/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			res => {
+			  let array = [];
+			  async.forEachOf(
+				res,
+				(position, key, callback) => {
+				  position.quantity = Number(position.quantity);
+				  if (position.quantity !== 0) {
+					Instrument.getByURL(position.instrument).then(
+					  instrument => {
+						position.InstrumentObject = instrument;
+						array.push(position);
+						callback();
+					  }
+					);
+				  } else callback();
+				},
+				() => {
+				  resolve(new Portfolio(_this, array));
+				}
+			  );
+			},
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -564,33 +564,33 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getHistoricals(span, interval) {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/portfolios/historicals/' + _this.account,
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          },
-          qs: {
-            span: span,
-            interval: interval
-          }
-        },
-        (error, response, body) => {
-          Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            res => {
-              resolve(res);
-            },
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/portfolios/historicals/' + _this.account,
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  },
+		  qs: {
+			span: span,
+			interval: interval
+		  }
+		},
+		(error, response, body) => {
+		  Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			res => {
+			  resolve(res);
+			},
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   // Invalid token?
@@ -616,27 +616,27 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   getLinkedBanks() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + '/ach/relationships/',
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + '/ach/relationships/',
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -647,52 +647,52 @@ class User extends Robinhood {
    * @returns {Promise<Object>}
    */
   addDeposit(bankID, amount, frequency) {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      if (!bankID instanceof String)
-        reject(new Error("Parameter 'bankID' must be a string."));
-      else if (!amount instanceof String)
-        reject(new Error("Parameter 'amount' must be a string."));
-      else if (!frequency instanceof String)
-        reject(new Error("Parameter 'frequency' must be a string."));
-      else if (
-        ['', 'weekly', 'biweekly', 'monthly', 'quarterly'].indexOf(
-          frequency
-        ) === -1
-      )
-        reject(
-          new Error(
-            'Provided frequency parameter is invalid: ' +
-              frequency +
-              "\nValid input: empty string (one-time deposit), 'weekly,' 'biweekly,' 'monthly,' or 'quarterly.'"
-          )
-        );
-      else {
-        request(
-          {
-            uri: _this.url + '/ach/deposit_schedules/',
-            headers: {
-              Authorization: 'Bearer ' + _this.token
-            },
-            qs: {
-              achRelationship: _this.url + '/ach/relationships/' + bankID + '/',
-              amount: amount,
-              frequency: frequency
-            }
-          },
-          (error, response, body) => {
-            return Robinhood.handleResponse(
-              error,
-              response,
-              body,
-              _this.token,
-              resolve,
-              reject
-            );
-          }
-        );
-      }
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  if (!bankID instanceof String)
+		reject(new Error("Parameter 'bankID' must be a string."));
+	  else if (!amount instanceof String)
+		reject(new Error("Parameter 'amount' must be a string."));
+	  else if (!frequency instanceof String)
+		reject(new Error("Parameter 'frequency' must be a string."));
+	  else if (
+		['', 'weekly', 'biweekly', 'monthly', 'quarterly'].indexOf(
+		  frequency
+		) === -1
+	  )
+		reject(
+		  new Error(
+			'Provided frequency parameter is invalid: ' +
+			  frequency +
+			  "\nValid input: empty string (one-time deposit), 'weekly,' 'biweekly,' 'monthly,' or 'quarterly.'"
+		  )
+		);
+	  else {
+		request(
+		  {
+			uri: _this.url + '/ach/deposit_schedules/',
+			headers: {
+			  Authorization: 'Bearer ' + _this.token
+			},
+			qs: {
+			  achRelationship: _this.url + '/ach/relationships/' + bankID + '/',
+			  amount: amount,
+			  frequency: frequency
+			}
+		  },
+		  (error, response, body) => {
+			return Robinhood.handleResponse(
+			  error,
+			  response,
+			  body,
+			  _this.token,
+			  resolve,
+			  reject
+			);
+		  }
+		);
+	  }
+	});
   }
 
   // DOCUMENTS
@@ -702,27 +702,27 @@ class User extends Robinhood {
    * @returns {Promise<Array>}
    */
   getDocuments() {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      request(
-        {
-          uri: _this.url + /documents/,
-          headers: {
-            Authorization: 'Bearer ' + _this.token
-          }
-        },
-        (error, response, body) => {
-          return Robinhood.handleResponse(
-            error,
-            response,
-            body,
-            _this.token,
-            resolve,
-            reject
-          );
-        }
-      );
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  request(
+		{
+		  uri: _this.url + /documents/,
+		  headers: {
+			Authorization: 'Bearer ' + _this.token
+		  }
+		},
+		(error, response, body) => {
+		  return Robinhood.handleResponse(
+			error,
+			response,
+			body,
+			_this.token,
+			resolve,
+			reject
+		  );
+		}
+	  );
+	});
   }
 
   /**
@@ -733,61 +733,61 @@ class User extends Robinhood {
    * @returns {Promise}
    */
   downloadDocuments(folder) {
-    const _this = this;
-    return new Promise((resolve, reject) => {
-      if (!fs.existsSync(folder)) fs.mkdirSync(folder);
-      _this.getDocuments().then(array => {
-        async.eachSeries(
-          array,
-          (document, eachCallback) => {
-            const dir = path.join(folder, document.type);
-            const file = path.join(dir, document.id + '.pdf');
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-            let downloaded = false;
-            async.whilst(
-              () => {
-                return !downloaded;
-              },
-              whilstCallback => {
-                let seconds = 0;
-                const req = request(
-                  {
-                    uri: document.download_url,
-                    headers: {
-                      Authorization: 'Bearer ' + _this.token
-                    }
-                  },
-                  (error, response, body) => {
-                    if (error) reject(error);
-                    else if (response.statusCode !== 200) {
-                      seconds = Number(
-                        body.split('available in ')[1].split(' seconds')[0]
-                      );
-                    } else downloaded = true;
-                  }
-                );
-                req.on('end', () => {
-                  setTimeout(() => {
-                    if (seconds === 0) whilstCallback();
-                    else
-                      setTimeout(() => {
-                        whilstCallback();
-                      }, seconds * 1000);
-                  }, 1000);
-                });
-                req.pipe(fs.createWriteStream(file));
-              },
-              () => {
-                eachCallback();
-              }
-            );
-          },
-          () => {
-            resolve();
-          }
-        );
-      });
-    });
+	const _this = this;
+	return new Promise((resolve, reject) => {
+	  if (!fs.existsSync(folder)) fs.mkdirSync(folder);
+	  _this.getDocuments().then(array => {
+		async.eachSeries(
+		  array,
+		  (document, eachCallback) => {
+			const dir = path.join(folder, document.type);
+			const file = path.join(dir, document.id + '.pdf');
+			if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+			let downloaded = false;
+			async.whilst(
+			  () => {
+				return !downloaded;
+			  },
+			  whilstCallback => {
+				let seconds = 0;
+				const req = request(
+				  {
+					uri: document.download_url,
+					headers: {
+					  Authorization: 'Bearer ' + _this.token
+					}
+				  },
+				  (error, response, body) => {
+					if (error) reject(error);
+					else if (response.statusCode !== 200) {
+					  seconds = Number(
+						body.split('available in ')[1].split(' seconds')[0]
+					  );
+					} else downloaded = true;
+				  }
+				);
+				req.on('end', () => {
+				  setTimeout(() => {
+					if (seconds === 0) whilstCallback();
+					else
+					  setTimeout(() => {
+						whilstCallback();
+					  }, seconds * 1000);
+				  }, 1000);
+				});
+				req.pipe(fs.createWriteStream(file));
+			  },
+			  () => {
+				eachCallback();
+			  }
+			);
+		  },
+		  () => {
+			resolve();
+		  }
+		);
+	  });
+	});
   }
 }
 
